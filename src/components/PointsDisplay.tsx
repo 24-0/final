@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Trophy, Star, TrendingUp } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 interface PointsDisplayProps {
   showRank?: boolean
@@ -13,6 +14,7 @@ interface UserPoints {
   points: number
   rank?: number
   username?: string
+  full_name?: string
 }
 
 export default function PointsDisplay({
@@ -26,11 +28,31 @@ export default function PointsDisplay({
   useEffect(() => {
     const fetchUserPoints = async () => {
       try {
-        const response = await fetch('/api/points')
-        if (response.ok) {
-          const data = await response.json()
-          setUserPoints(data)
+        // Check if user is authenticated
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          setLoading(false)
+          return
         }
+
+        // Fetch user points directly from Supabase
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('points, username, full_name')
+          .eq('id', user.id)
+          .single()
+
+        if (error) {
+          console.error('Error fetching user points:', error)
+          return
+        }
+
+        setUserPoints({
+          points: profile.points || 0,
+          username: profile.username,
+          full_name: profile.full_name
+        })
       } catch (error) {
         console.error('Error fetching user points:', error)
       } finally {

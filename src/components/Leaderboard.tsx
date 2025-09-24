@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Trophy, Medal, Award, Crown } from 'lucide-react'
-import PointsDisplay from './PointsDisplay'
+import { Trophy, Medal, Award, Crown, Star } from 'lucide-react'
 
 interface LeaderboardUser {
   id: string
@@ -32,7 +31,9 @@ export default function Leaderboard({
         const response = await fetch(`/api/leaderboard?limit=${limit}`)
         if (response.ok) {
           const data = await response.json()
-          setLeaderboard(data.leaderboard)
+          setLeaderboard(data.leaderboard || [])
+        } else {
+          console.error('Failed to fetch leaderboard:', response.status)
         }
       } catch (error) {
         console.error('Error fetching leaderboard:', error)
@@ -115,11 +116,9 @@ export default function Leaderboard({
                   {user.full_name || user.username || 'Anonymous'}
                 </span>
               </div>
-              <div className="text-sm text-gray-500">
-                <PointsDisplay
-                  size="sm"
-                  className="text-gray-600"
-                />
+              <div className="flex items-center gap-1 text-sm text-gray-500">
+                <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                <span>{user.points.toLocaleString()} pts</span>
               </div>
             </div>
 
