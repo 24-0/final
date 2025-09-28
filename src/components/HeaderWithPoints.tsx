@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import PointsDisplay from './PointsDisplay';
+import ThemeToggle from './ThemeToggle';
 
 export default function HeaderWithPoints() {
   const pathname = usePathname() || '';
 
   return (
-    <header className="bg-white shadow p-4 flex justify-between items-center">
+    <header className="bg-background shadow p-4 flex justify-between items-center">
       <Link href="/" className="text-xl font-bold">
         StudyConnect
       </Link>
@@ -29,8 +30,9 @@ export default function HeaderWithPoints() {
           Profile
         </Link>
       </nav>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <PointsDisplay showRank={true} size="sm" />
+        <ThemeToggle />
       </div>
     </header>
   );

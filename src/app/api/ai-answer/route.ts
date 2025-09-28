@@ -1,49 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
+import OpenAI from 'openai'
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
 export async function POST(request: NextRequest) {
   try {
-    const { questionId, questionContent } = await request.json()
+    const { questionContent } = await request.json()
 
-    if (!questionId || !questionContent) {
-      return NextResponse.json(
-        { error: 'Question ID and content are required' },
-        { status: 400 }
-      )
+    if (!questionContent) {
+      return NextResponse.json({ error: 'Question content is required' }, { status: 400 })
     }
 
-    // For now, return a mock AI answer
-    // In a real implementation, you would integrate with an AI service like OpenAI
-    const mockAnswer = `Based on the question: "${questionContent.substring(0, 100)}..."
+    const prompt = `Provide a helpful, accurate answer to the following question. Keep the answer concise but informative:\n\n${questionContent}`
 
-This is a comprehensive answer that addresses the key points raised in the question. The solution involves understanding the fundamental concepts and applying them systematically.
-
-**Key Points:**
-• Understanding the core problem
-• Step-by-step approach to solution
-• Important considerations and best practices
-
-**Solution:**
-The most effective approach is to break down the problem into smaller, manageable components and tackle each one systematically. This ensures a thorough understanding and robust implementation.
-
-**Additional Notes:**
-• Always consider edge cases
-• Test your solution thoroughly
-• Document your approach for future reference
-
-This answer provides a solid foundation for solving similar problems in the future.`
-
-    const confidenceScore = 0.85 + Math.random() * 0.1 // Random between 0.85-0.95
-
-    return NextResponse.json({
-      answer: mockAnswer,
-      confidence_score: confidenceScore
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 500,
+      temperature: 0.7,
     })
 
+    const answer = completion.choices[0]?.message?.content?.trim() || 'No answer generated'
+
+    // Simple confidence score (in production, could use more sophisticated logic)
+    const confidence_score = 0.85
+
+    return NextResponse.json({ answer, confidence_score })
   } catch (error) {
-    console.error('Error in AI answer API:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('Error generating AI answer:', error)
+    return NextResponse.json({ error: 'Failed to generate AI answer' }, { status: 500 })
   }
 }
